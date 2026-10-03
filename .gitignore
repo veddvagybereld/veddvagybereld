@@ -50,3 +50,7 @@ next-env.d.ts
 /logo_teljes.png
 /scaffolding.jpg
 /used-products.jpg
+.vercel
+.env*
+# Local backup files
+*.zip
