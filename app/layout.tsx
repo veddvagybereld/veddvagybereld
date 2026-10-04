@@ -2,17 +2,20 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import { LanguageProvider } from "./context/LanguageContext";
+import { allSeoKeywords } from "./lib/seo";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.molnarrent.ro"),
 
   title: {
-    default: "MolnarRent – Vedd vagy Béreld",
+    default: "MolnarRent – Állványbérlés | Vedd vagy Béreld",
     template: "%s | MolnarRent",
   },
 
   description:
-    "Használt termékek értékesítése és állványok bérlése. Vedd vagy béreld a számodra megfelelő terméket a MolnarRent kínálatából.",
+    "Állványbérlés, építési és homlokzati állványok, valamint minőségi használt termékek a MolnarRent kínálatából.",
+
+  keywords: allSeoKeywords,
 
   alternates: {
     canonical: "/",
