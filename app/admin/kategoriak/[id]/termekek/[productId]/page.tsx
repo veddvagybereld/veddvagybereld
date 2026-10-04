@@ -15,7 +15,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-import { db } from "../../../../../lib/firebase";
+import { auth, db } from "../../../../../lib/firebase";
 
 type PageProps = {
   params: Promise<{
@@ -309,10 +309,21 @@ export default function TermekSzerkesztesPage({
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+      const token = await auth.currentUser?.getIdToken();
+
+      if (!token) {
+        throw new Error(
+          "A feltöltéshez admin bejelentkezés szükséges."
+        );
+      }
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
     const result = await response.json();
 

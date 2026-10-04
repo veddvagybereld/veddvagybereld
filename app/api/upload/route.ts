@@ -1,8 +1,48 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
+import { adminAuth } from "../../lib/firebase-admin";
+
+export const runtime = "nodejs";
+
+const ADMIN_EMAIL = "veddvagybereld@gmail.com";
+
 export async function POST(request: Request) {
   try {
+    // Firebase ID token kiolvasása
+    const authorization =
+      request.headers.get("authorization");
+
+    if (
+      !authorization ||
+      !authorization.startsWith("Bearer ")
+    ) {
+      return NextResponse.json(
+        { error: "Nincs bejelentkezve." },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authorization.substring(7);
+
+    // Token ellenőrzése a Firebase szerveren
+    const decodedToken =
+      await adminAuth.verifyIdToken(idToken);
+
+    const email =
+      decodedToken.email?.toLowerCase() ?? "";
+
+    if (
+      !decodedToken.email_verified ||
+      email !== ADMIN_EMAIL
+    ) {
+      return NextResponse.json(
+        { error: "Nincs jogosultság a feltöltéshez." },
+        { status: 403 }
+      );
+    }
+
+    // Fájl feldolgozása
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -20,6 +60,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Feltöltés Vercel Blobba
     const blob = await put(
       `uploads/${Date.now()}-${file.name}`,
       file,
@@ -34,10 +75,16 @@ export async function POST(request: Request) {
       pathname: blob.pathname,
     });
   } catch (error) {
-    console.error("Blob feltöltési hiba:", error);
+    console.error(
+      "Védett Blob feltöltési hiba:",
+      error
+    );
 
     return NextResponse.json(
-      { error: "A fájl feltöltése nem sikerült." },
+      {
+        error:
+          "A fájl feltöltése vagy a jogosultság ellenőrzése nem sikerült.",
+      },
       { status: 500 }
     );
   }
