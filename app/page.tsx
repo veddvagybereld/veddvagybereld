@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -25,6 +26,15 @@ type HomeSettings = {
   };
 
   backgroundImageUrl?: string;
+};
+
+type ContactData = {
+  address: {
+    hu: string;
+    ro: string;
+  };
+
+  phone: string;
 };
 
 type Category = {
@@ -52,6 +62,15 @@ export default function Home() {
   const [homeSettings, setHomeSettings] =
     useState<HomeSettings | null>(null);
 
+  const [contact, setContact] =
+    useState<ContactData>({
+      address: {
+        hu: "",
+        ro: "",
+      },
+      phone: "",
+    });
+
   const [categories, setCategories] =
     useState<Category[]>([]);
 
@@ -77,6 +96,31 @@ export default function Home() {
           setHomeSettings(
             homeSnapshot.data() as HomeSettings
           );
+        }
+
+        // =====================================================
+        // Kapcsolati adatok
+        // =====================================================
+
+        const contactRef = doc(
+          db,
+          "siteSettings",
+          "contact"
+        );
+
+        const contactSnapshot =
+          await getDoc(contactRef);
+
+        if (contactSnapshot.exists()) {
+          const data = contactSnapshot.data();
+
+          setContact({
+            address: {
+              hu: data.address?.hu ?? "",
+              ro: data.address?.ro ?? "",
+            },
+            phone: data.phone ?? "",
+          });
         }
 
         // =====================================================
@@ -166,6 +210,23 @@ export default function Home() {
 
   const backgroundImageUrl =
     homeSettings?.backgroundImageUrl ?? "";
+
+  // =========================================================
+  // Kapcsolati adatok
+  // =========================================================
+
+  const contactAddress =
+    language === "ro"
+      ? contact.address.ro
+      : contact.address.hu;
+
+  const contactPhone =
+    contact.phone.trim();
+
+  const phoneHref =
+    contactPhone
+      ? `tel:${contactPhone.replace(/[^\d+]/g, "")}`
+      : "";
 
   return (
     <div
@@ -384,25 +445,36 @@ export default function Home() {
 
             <div className="flex flex-col gap-3 text-sm text-gray-200 sm:flex-row sm:gap-8">
 
-              <div className="flex items-center gap-2">
-                <span className="text-lg">
-                  📍
-                </span>
+              {contactAddress && (
+                <div className="flex items-center gap-2">
 
-                <span>
-                  {t.address}
-                </span>
-              </div>
+                  <span className="text-lg">
+                    📍
+                  </span>
 
-              <div className="flex items-center gap-2">
-                <span className="text-lg">
-                  ☎
-                </span>
+                  <span>
+                    {contactAddress}
+                  </span>
 
-                <span>
-                  {t.phone}
-                </span>
-              </div>
+                </div>
+              )}
+
+              {contactPhone && (
+                <div className="flex items-center gap-2">
+
+                  <span className="text-lg">
+                    ☎
+                  </span>
+
+                  <a
+                    href={phoneHref}
+                    className="transition hover:text-orange-400"
+                  >
+                    {contactPhone}
+                  </a>
+
+                </div>
+              )}
 
             </div>
 
