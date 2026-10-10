@@ -12,8 +12,7 @@ const firebaseConfig = {
   measurementId: "G-KZL4ZNZS8L",
 };
 
-// Next.js fejlesztés közben többször is betöltheti a modult,
-// ezért csak akkor inicializáljuk, ha még nincs Firebase app.
+// Firebase Client kapcsolat.
 const app =
   getApps().length === 0
     ? initializeApp(firebaseConfig)

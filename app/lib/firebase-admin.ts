@@ -1,38 +1,36 @@
-import {
-  cert,
-  getApps,
-  initializeApp,
-} from "firebase-admin/app";
+import "server-only";
 
+import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
 
-const projectId =
-  process.env.FIREBASE_ADMIN_PROJECT_ID;
+// Gemeinsame Firebase-Admin-Initialisierung.
+const appName = "molnarrent-sitemap";
 
-const clientEmail =
-  process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+const existingApp = getApps().find(
+  (app) => app.name === appName
+);
 
-const privateKey =
-  process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(
-    /\\n/g,
-    "\n"
+const app =
+  existingApp ??
+  initializeApp(
+    {
+      credential: cert({
+        projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(
+          /\\n/g,
+          "\n"
+        ),
+      }),
+    },
+    appName
   );
 
-if (!projectId || !clientEmail || !privateKey) {
-  throw new Error(
-    "Hiányzó Firebase Admin környezeti változó."
-  );
+// Firebase Authentication für serverseitige API-Routen.
+export const adminAuth = getAuth(app);
+
+// Firestore für serverseitige Kategorie- und SEO-Abfragen.
+export function getAdminFirestore() {
+  return getFirestore(app);
 }
-
-const firebaseAdminApp =
-  getApps().length === 0
-    ? initializeApp({
-        credential: cert({
-          projectId,
-          clientEmail,
-          privateKey,
-        }),
-      })
-    : getApps()[0];
-
-export const adminAuth = getAuth(firebaseAdminApp);
